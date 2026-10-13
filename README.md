@@ -18,7 +18,7 @@ A small, beginner-friendly app for keeping your vehicles and their maintenance h
 - Organize service records by category (oil change, general service, brakes, tires, battery, other), validated on the backend.
 - Mileage must stay non-decreasing per vehicle; lower readings are rejected with a message to correct the earlier entry.
 - Attach receipt files (PDF/JPG/PNG/WebP up to 5 MB) to service records; only the vehicle owner can view or download them.
-- Filter service history by service type or date and choose the date order.
+- Filter service history by service type or an inclusive start/end date range, and choose the date order. The start date must be on or before the end date; filters with no matches show a prompt to adjust them.
 - See service counts, the last service, and the next service on your dashboard.
 - Search your vehicles by registration number. Search ignores letter case and trims whitespace at the beginning and end; internal whitespace remains significant.
 - See total maintenance spending for a vehicle over the selected date range on the vehicle details page.

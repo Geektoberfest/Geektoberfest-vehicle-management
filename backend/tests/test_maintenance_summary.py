@@ -119,6 +119,35 @@ def test_date_boundaries_are_inclusive(setup):
     assert Decimal(body["total_cost"]) == Decimal("600.75")
 
 
+def test_record_list_includes_both_date_boundaries(setup):
+    response = TestClient(app).get(
+        f"/vehicles/{setup['vehicle']}/maintenance",
+        params={"start_date": "2026-02-15", "end_date": "2026-03-20"},
+    )
+
+    assert response.status_code == 200
+    assert [record["service_date"] for record in response.json()] == ["2026-03-20", "2026-02-15"]
+
+
+def test_record_list_rejects_inverted_date_range(setup):
+    response = TestClient(app).get(
+        f"/vehicles/{setup['vehicle']}/maintenance",
+        params={"start_date": "2026-05-01", "end_date": "2026-01-01"},
+    )
+
+    assert response.status_code == 422
+
+
+def test_record_list_returns_empty_for_date_range_without_matches(setup):
+    response = TestClient(app).get(
+        f"/vehicles/{setup['vehicle']}/maintenance",
+        params={"start_date": "2027-01-01", "end_date": "2027-12-31"},
+    )
+
+    assert response.status_code == 200
+    assert response.json() == []
+
+
 def test_empty_range_returns_zero(setup):
     response = TestClient(app).get(
         f"/vehicles/{setup['vehicle']}/maintenance/summary",
