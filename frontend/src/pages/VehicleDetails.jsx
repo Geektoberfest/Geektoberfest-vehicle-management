@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { api, downloadMaintenanceCsv, friendlyDate } from '../api'
+import { api, downloadMaintenanceCsv, formatCost, friendlyDate } from '../api'
 import { SERVICE_TYPES } from '../serviceTypes'
 import MaintenanceForm from '../components/MaintenanceForm'
 import MaintenanceTable from '../components/MaintenanceTable'
@@ -15,8 +15,6 @@ export default function VehicleDetails() {
   const [editingRecord, setEditingRecord] = useState(null)
   const [page, setPage] = useState(1)
   const limit = 10
-
-  function formatINR(value) { const amount = Number(value ?? 0); return Number.isFinite(amount) ? amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-' }
 
   async function loadRecords() {
     if (startDate && endDate && startDate > endDate) {
@@ -58,7 +56,6 @@ export default function VehicleDetails() {
   return <div className="vehicle-details"><Link className="back-link" to="/">← Back to garage</Link>{error && <p className="error-banner">{error}</p>}
     <section className="detail-hero"><div className="detail-title"><span className="vehicle-icon large">↗</span><div><span className="eyebrow">{vehicle.year} MODEL · {vehicle.registration_number}</span><h1>{vehicle.make} {vehicle.model}</h1><p>{Number(vehicle.current_mileage).toLocaleString()} km on the road</p></div></div><div className="detail-actions"><button className="button secondary" onClick={() => setFormMode(formMode === 'vehicle' ? '' : 'vehicle')}>Edit vehicle</button><button className="button danger" onClick={deleteVehicle}>Delete</button></div></section>
     {formMode === 'vehicle' && <section className="inline-editor"><div className="section-heading"><div><h2>Edit vehicle details</h2></div><button className="text-button" onClick={() => setFormMode('')}>Close</button></div><VehicleForm vehicleId={id} initial={vehicle} onSaved={async () => { setVehicle(await api(`/vehicles/${id}`)); setFormMode('') }} /></section>}
-
     <section className="maintenance-section">
       <div className="section-heading history-heading">
         <div>
@@ -167,7 +164,7 @@ export default function VehicleDetails() {
         </span>
       </div>
 
-      <p className="spending-summary" data-testid="spending-summary">Total spent in selected period: <strong>{summary ? `₹${formatINR(summary.total_cost)}` : '—'}</strong>{summary && <span> · {summary.record_count} service{summary.record_count === 1 ? '' : 's'}</span>}</p>
+      <p className="spending-summary" data-testid="spending-summary">Total spent in selected period: <strong>{summary ? formatCost(summary.total_cost) : '—'}</strong>{summary && <span> · {summary.record_count} service{summary.record_count === 1 ? '' : 's'}</span>}</p>
       {formMode === 'maintenance' && <div className="inline-editor"><div className="section-heading"><div><h2>{editingRecord ? 'Edit service' : 'Add a service'}</h2></div></div><MaintenanceForm vehicleId={id} record={editingRecord} onCancel={() => setFormMode('')} onSaved={async () => { await loadRecords(); await loadSummary(); setFormMode(''); setEditingRecord(null); const latest = await api(`/vehicles/${id}`); setVehicle(latest) }} /></div>}
       <MaintenanceTable records={records} isFiltered={Boolean(startDate || endDate || filter)} onResetFilters={resetAllFilters} onEdit={record => { setEditingRecord(record); setFormMode('maintenance') }} onDelete={deleteRecord} />
       <div className="pagination-controls" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', marginTop: '1.5rem' }}>
