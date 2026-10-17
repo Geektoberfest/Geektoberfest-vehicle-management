@@ -10,11 +10,16 @@ export async function api(path, options = {}) {
   if (response.status === 204) return null
   const body = await response.json().catch(() => ({}))
   if (!response.ok) {
-    const message = typeof body.detail === 'string'
-      ? body.detail
-      : Array.isArray(body.detail)
-        ? body.detail.map(e => e.msg || e.detail || JSON.stringify(e)).join(', ')
-        : 'Something went wrong. Please try again.'
+    let message = 'Something went wrong. Please try again.'
+    if (typeof body.detail === 'string') {
+      message = body.detail
+    } else if (Array.isArray(body.detail)) {
+      message = body.detail.map(d => {
+        const field = d.loc ? d.loc[d.loc.length - 1] : ''
+        const cleanMsg = (d.msg || d.detail || JSON.stringify(d)).replace(/^Value error,\s*/i, '')
+        return field ? `${field}: ${cleanMsg}` : cleanMsg
+      }).join('. ')
+    }
     throw new Error(message)
   }
   return body
